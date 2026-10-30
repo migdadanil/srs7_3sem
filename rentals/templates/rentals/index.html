@@ -1,0 +1,141 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOTHING . RENT // МЕДИАЛАБОРАТОРИЯ 317</title>
+    <!-- Точечный шрифт (Dot Matrix) и базовый гротеск -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&family=VT323&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'rentals/css/nothing.css' %}">
+</head>
+<body>
+
+    <!-- Фоновое зацикленное видео северного сияния -->
+    <video autoplay loop muted playsinline id="bg-video">
+        <source src="{% static 'rentals/img/aurora-loop.mp4' %}" type="video/mp4">
+    </video>
+    <div class="video-overlay"></div>
+
+    <!-- Основной стеклянный контейнер -->
+    <div class="shell">
+        
+        <!-- Верхняя системная панель Nothing -->
+        <header class="matrix-header">
+            <div class="brand">
+                <span class="dot-brand">NOTHING . RENT</span>
+                <span class="sys-badge"><span class="rec-dot"></span>СИСТЕМА_ОНЛАЙН // КАФЕДРА 317</span>
+            </div>
+            <div class="kpi-group">
+                <div class="kpi-pill">
+                    <span class="kpi-label">ВСЕГО_ТЕХНИКИ</span>
+                    <span class="kpi-val" id="kpi-total">--</span>
+                </div>
+                <div class="kpi-pill">
+                    <span class="kpi-label">ДОСТУПНО</span>
+                    <span class="kpi-val highlight" id="kpi-available">--</span>
+                </div>
+                <div class="kpi-pill">
+                    <span class="kpi-label">В_РАБОТЕ</span>
+                    <span class="kpi-val text-red" id="kpi-active">--</span>
+                </div>
+            </div>
+            <button class="btn-glyph" id="btn-open-modal">+ НОВАЯ_БРОНЬ</button>
+        </header>
+
+        <!-- Панель серверной фильтрации -->
+        <div class="filter-strip">
+            <div class="filter-box">
+                <span class="filter-tag">КАТЕГОРИЯ:</span>
+                <select id="filter-category" class="nothing-select">
+                    <option value="">ВСЕ КАТЕГОРИИ</option>
+                    <option value="camera">КАМЕРЫ И ТУШКИ</option>
+                    <option value="optics">КИНООПТИКА</option>
+                    <option value="light">СТУДИЙНЫЙ СВЕТ</option>
+                    <option value="audio">ЗВУКОВЫЕ СИСТЕМЫ</option>
+                    <option value="grip">СТАБИЛИЗАТОРЫ И РИГИ</option>
+                </select>
+            </div>
+            <div class="filter-box">
+                <span class="filter-tag">СТАТУС:</span>
+                <select id="filter-status" class="nothing-select">
+                    <option value="">ВСЕ СТАТУСЫ</option>
+                    <option value="draft">ЧЕРНОВИК</option>
+                    <option value="confirmed">ЗАБРОНИРОВАНО</option>
+                    <option value="active">НА СЪЕМКЕ</option>
+                    <option value="returned">ВОЗВРАЩЕНО</option>
+                    <option value="cancelled">ОТМЕНЕНО</option>
+                </select>
+            </div>
+            <div class="search-box">
+                <input type="text" id="live-search" class="nothing-input" placeholder="ПОИСК ПО ПРОЕКТУ...">
+            </div>
+        </div>
+
+        <!-- Двухколоночный воркспейс: список броней + инспектор с таймлайном -->
+        <div class="workspace-grid">
+            
+            <!-- Левая колонка: реестр бронирований -->
+            <div class="cards-column">
+                <div class="section-title">ПРОИЗВОДСТВЕННАЯ ЛЕНТА // БРОНИРОВАНИЯ</div>
+                <div id="bookings-container" class="bookings-grid">
+                    <!-- Заполняется асинхронно через JS -->
+                </div>
+            </div>
+
+            <!-- Правая колонка: детальный инспектор и история аудита -->
+            <div class="inspector-column">
+                <div class="section-title">ИНСПЕКТОР ОБЪЕКТА // ЖУРНАЛ АУДИТА</div>
+                <div id="inspector-card" class="inspector-card empty">
+                    <div class="empty-msg">ВЫБЕРИТЕ ОБЪЕКТ ДЛЯ ПРОСМОТРА</div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Модальное окно создания бронирования -->
+    <div class="modal-backdrop" id="modal-create">
+        <div class="modal-window">
+            <div class="modal-header">
+                <span class="modal-title">ОФОРМЛЕНИЕ БРОНИ // СПЕЦИФИКАЦИЯ</span>
+                <button class="modal-close" id="modal-close-btn">×</button>
+            </div>
+            <form id="create-booking-form">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label>ЕДИНИЦА ОБОРУДОВАНИЯ *</label>
+                    <select id="modal-equipment" class="nothing-select" required>
+                        <!-- Загружается из API -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>НАЗВАНИЕ ПРОЕКТА (МИНИМУМ 5 СИМВОЛОВ) *</label>
+                    <input type="text" id="modal-title" class="nothing-input" placeholder="Например: Съемка лукбука для Speedora" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>ДАТА НАЧАЛА *</label>
+                        <input type="date" id="modal-start" class="nothing-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label>ДАТА ВОЗВРАТА *</label>
+                        <input type="date" id="modal-end" class="nothing-input" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>ТЕХНИЧЕСКИЕ ЗАМЕТКИ ОПЕРАТОРА</label>
+                    <textarea id="modal-notes" class="nothing-textarea" placeholder="Объективы, дополнительные аккумуляторы, требования к ProRes..."></textarea>
+                </div>
+                <div id="modal-error-banner" class="error-banner" style="display:none;"></div>
+                <button type="submit" class="btn-glyph primary w-100">ПОДТВЕРДИТЬ РЕЗЕРВИРОВАНИЕ</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="{% static 'rentals/js/app.js' %}"></script>
+</body>
+</html>
