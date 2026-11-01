@@ -1,0 +1,4 @@
+- GET /api/rentals/bookings/ — реестр заявок
+- POST /api/rentals/bookings/ — создание черновика
+- POST /api/rentals/bookings/{id}/transition/ — смена статуса FSM
+- DELETE /api/rentals/bookings/{id}/ — удаление бронирования

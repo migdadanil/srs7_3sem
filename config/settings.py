@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "rest_framework",
+    "drf_spectacular",
     "rentals",
 ]
 
@@ -140,4 +142,10 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.SessionAuthentication",
     ],
+}
+SPECTACULAR_SETTINGS = {
+    "TITLE": "NOTHING . RENT API",
+    "DESCRIPTION": "Спецификация диспетчеризации и конечного автомата аренды съемочной техники (Кафедра 317)",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
 }

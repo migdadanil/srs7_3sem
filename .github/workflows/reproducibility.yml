@@ -1,0 +1,39 @@
+name: Clean Reproducibility Verification
+
+on: [push, pull_request]
+jobs:
+  verify-clean-run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python Environment
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install System and Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Prepare Clean Environment Config
+        run: |
+          cp .env.example .env
+
+      - name: Execute Database Migrations
+        run: |
+          python manage.py migrate --noinput
+
+      - name: Populate Seed Catalog & Test Bookings
+        run: |
+          python manage.py seed_bookings
+
+      - name: Validate Local Static Collection
+        run: |
+          python manage.py collectstatic --noinput
+
+      - name: Run System Sanity Check
+        run: |
+          python manage.py check --deploy
