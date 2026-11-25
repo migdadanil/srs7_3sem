@@ -1,35 +1,46 @@
-name: Clean Reproducibility Verification
+name: Проверка проекта
 
 on:
   push:
-    branches: [ main ]
+    branches: [main, feature/srs8-documentation]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.14'
 
-      - name: Install dependencies
+      - name: Проверка документации
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          python - <<'PY'
+          from pathlib import Path
+          import re
 
-      - name: Prepare environment file
-        run: |
-          cp .env.example .env
+          files = ['README.md', 'docs/architecture.md',
+                   'docs/database.md', 'docs/api.md',
+                   'docs/deployment.md', 'docs/troubleshooting.md']
 
-      - name: Run migrations
-        run: |
-          python manage.py migrate
+          for file in files:
+              path = Path(file)
+              assert path.is_file(), f'Нет файла {file}'
+              content = path.read_text()
+              assert content.strip(), f'Пустой файл {file}'
 
-      - name: Verify Django system check
-        run: |
-          python manage.py check
+              for link in re.findall(r'\]\(([^)\s]+)\)', content):
+                  if link.startswith(('http://', 'https://', '#')):
+                      continue
+                  assert (path.parent / link.split('#')[0]).exists(), f'Не найдена ссылка {link}'
+
+              print(f'{file}: OK')
+          PY
+
+      - name: Проверка чистого запуска
+        run: make test-clean
