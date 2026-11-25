@@ -1,4 +1,5 @@
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
+from django.conf import settings
 from django.contrib.auth.models import User
 from rentals.models import Equipment, Booking, BookingEventLog
 from rentals.services import BookingWorkflowService
@@ -9,18 +10,26 @@ class Command(BaseCommand):
     help = "Наполнение базы демонстрационными бронированиями техники"
 
     def handle(self, *args, **options):
-        user = User.objects.filter(is_superuser=True).first()
-        if not user:
-            user = User.objects.create_superuser(
-                "d_migda", "migda@mai.ru", "password123"
-            )
+        if not settings.DEBUG or settings.DATABASES["default"]["ENGINE"] != "django.db.backends.sqlite3":
+            raise CommandError("Демонстрационные данные разрешены только в локальном окружении")
 
-        # Создаем второго студента для проверки изоляции данных (по ТЗ СРС №7)
-        student2, _ = User.objects.get_or_create(
-            username="student_mai", defaults={"email": "student@mai.ru"}
+        # Создаем отдельные демонстрационные аккаунты
+        user, created = User.objects.get_or_create(
+            username="demo_admin",
+            defaults={"is_staff": True, "is_superuser": True}
         )
-        student2.set_password("student123")
-        student2.save()
+
+        if created:
+            user.set_unusable_password()
+            user.save()
+
+        student2, created = User.objects.get_or_create(
+            username="demo_student"
+        )
+
+        if created:
+            student2.set_unusable_password()
+            student2.save()
 
         # Данные для наполнения
         demo_data = [
