@@ -10,3 +10,14 @@ db.sqlite3
 *.mov
 *.mp4
 media/
+
+# Environment configuration
+.env
+.env.*
+!.env.example
+
+# Collected static files
+/staticfiles/
+
+# Application background video
+!rentals/static/rentals/img/aurora-loop.mp4
