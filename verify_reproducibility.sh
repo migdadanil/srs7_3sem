@@ -39,7 +39,20 @@ cp .env.example .env
 
 echo "[5/9] Миграции и демонстрационные данные"
 python manage.py migrate --noinput
+python manage.py seed_gear
 python manage.py seed_bookings
+
+python manage.py shell -c '
+from rentals.models import Equipment, Booking, BookingEventLog
+
+assert Equipment.objects.count() == 8, "Не все оборудование создано"
+assert Booking.objects.count() == 6, "Не все бронирования созданы"
+assert BookingEventLog.objects.count() == 13, "История событий неполная"
+
+print("Оборудование:", Equipment.objects.count())
+print("Бронирования:", Booking.objects.count())
+print("События аудита:", BookingEventLog.objects.count())
+'
 
 echo "[6/9] Проверка Django и сбор статики"
 python manage.py check

@@ -25,6 +25,7 @@ migrate:
 	$(VENV_PYTHON) manage.py migrate
 
 seed:
+	$(VENV_PYTHON) manage.py seed_gear
 	$(VENV_PYTHON) manage.py seed_bookings
 
 run:
